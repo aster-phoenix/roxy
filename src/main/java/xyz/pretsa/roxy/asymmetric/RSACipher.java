@@ -1,4 +1,4 @@
-package sd.com.onb.crypto.service;
+package xyz.pretsa.roxy.asymmetric;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
@@ -8,24 +8,27 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Base64;
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 /**
  *
  * @author Ghazy
  */
-public class RSAService {
+public class RSACipher {
 
-    private static final String ALGO_TRANSFORMATION_STRING = "RSA/ECB/OAEPWITHSHA-512ANDMGF1PADDING";
+    private final String ALGO_TRANSFORMATION_STRING = "RSA/ECB/OAEPWITHSHA-512ANDMGF1PADDING";
 
-    public static String encrypt(String message, PublicKey publicKey) throws Exception {
+    public String encrypt(String message, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
         Cipher c = Cipher.getInstance(ALGO_TRANSFORMATION_STRING);
         c.init(Cipher.ENCRYPT_MODE, publicKey);
         byte[] encryptedTextArray = c.doFinal(message.getBytes("UTF-8"));
         return Base64.getEncoder().encodeToString(encryptedTextArray);
     }
 
-    public static String decrypt(String encryptedText, PrivateKey privateKey) throws Exception {
+    public String decrypt(String encryptedText, PrivateKey privateKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         byte[] encryptedTextArray = Base64.getDecoder().decode(encryptedText);
         Cipher c = Cipher.getInstance(ALGO_TRANSFORMATION_STRING);
         c.init(Cipher.DECRYPT_MODE, privateKey);
@@ -33,7 +36,7 @@ public class RSAService {
         return new String(plainText);
     }
 
-    public static String sign(String message,String algorithm, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
+    public String sign(String message,String algorithm, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
             UnsupportedEncodingException, SignatureException {
 
         Signature signature = Signature.getInstance(algorithm);
@@ -43,7 +46,7 @@ public class RSAService {
         return Base64.getEncoder().encodeToString(sign);
     }
 
-    public static boolean verify(String message, String sign, String algorithm, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
+    public boolean verify(String message, String sign, String algorithm, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
         byte[] signTextArray = Base64.getDecoder().decode(sign);
         Signature signature = Signature.getInstance(algorithm);
         signature.initVerify(publicKey);
