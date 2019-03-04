@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
@@ -37,9 +38,24 @@ public class AESWithGCMKeychainBuilder {
         return new AESWithGCMKeychain(secretKey, gcm, aad);
     }
     
+    public static AESWithGCMKeychain withExistingKeys(byte[] encodedSecretKey, int gcmSize, byte[] encodedGcm, byte[] aad) throws NoSuchAlgorithmException {
+        SecretKey secretKey = getSecretKeyFromEncodedKey(encodedSecretKey);
+        GCMParameterSpec gcm = getGcmParameterSpecFromEncodedIv(gcmSize, encodedGcm);
+        return new AESWithGCMKeychain(secretKey, gcm, aad);
+    }
+    
+    public static AESWithGCMKeychain withExistingKeys(String base64EncodedSecretKey, int gcmSize, String base64EncodedGcm, String base64EncodedAad) throws NoSuchAlgorithmException {
+        byte[] encodedSecretKey = Base64.getDecoder().decode(base64EncodedSecretKey);
+        byte[] encodedGcm = Base64.getDecoder().decode(base64EncodedGcm);
+        byte[] aad = Base64.getDecoder().decode(base64EncodedAad);
+        SecretKey secretKey = getSecretKeyFromEncodedKey(encodedSecretKey);
+        GCMParameterSpec gcm = getGcmParameterSpecFromEncodedIv(gcmSize, encodedGcm);
+        return new AESWithGCMKeychain(secretKey, gcm, aad);
+    }
+    
     public static AESWithGCMKeychain withNewKeysAtPath(Path keysPath) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         saveSecreyKeyToPath(generateSecretKey(KEY_SIZE), keysPath);
-        saveGcmParamenterSpecToPath(generateGCMParameterSpec(IV_SIZE, GCM_SIZE), keysPath);
+        saveGcmParameterSpecToPath(generateGCMParameterSpec(IV_SIZE, GCM_SIZE), keysPath);
         saveAadToPath(generateAad(FIXED_AAD), keysPath);
         return new AESWithGCMKeychain(loadSecretKeyFromPath(keysPath), loadGcmParamenterSpecFromPath(GCM_SIZE, keysPath), loadAadFromPath(keysPath));
     }
@@ -81,9 +97,7 @@ public class AESWithGCMKeychainBuilder {
             fis.read(encodedSecretKey);
         }
         // Generate Secret key.
-        SecretKeySpec spec = new SecretKeySpec(encodedSecretKey, ALGO);
-        SecretKey secretKey = spec;
-        return secretKey;
+        return getSecretKeyFromEncodedKey(encodedSecretKey);
     }
 
     public static GCMParameterSpec loadGcmParamenterSpecFromPath(int gcmSize, Path gcmPath) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -95,8 +109,7 @@ public class AESWithGCMKeychainBuilder {
             fis.read(iv);
         }
         // Generate GCM Parameter Spec key.
-        GCMParameterSpec spec = new GCMParameterSpec(gcmSize, iv);
-        return spec;
+        return getGcmParameterSpecFromEncodedIv(gcmSize, iv);
     }
 
     public static byte[] loadAadFromPath(Path aadPath) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
@@ -117,7 +130,7 @@ public class AESWithGCMKeychainBuilder {
         }
     }
 
-    public static void saveGcmParamenterSpecToPath(GCMParameterSpec spec, Path gcmPath) throws IOException {
+    public static void saveGcmParameterSpecToPath(GCMParameterSpec spec, Path gcmPath) throws IOException {
         // Store GCM parameter spec Key.
         try (FileOutputStream fos = new FileOutputStream(gcmPath.resolve("gcm.key").toFile())) {
             fos.write(spec.getIV());
@@ -129,5 +142,16 @@ public class AESWithGCMKeychainBuilder {
         try (FileOutputStream fos = new FileOutputStream(aadPath.resolve("aad.key").toFile())) {
             fos.write(aad);
         }
+    }
+    
+    private static SecretKey getSecretKeyFromEncodedKey(byte[] encodedSecretKey) {
+        SecretKeySpec spec = new SecretKeySpec(encodedSecretKey, ALGO);
+        SecretKey secretKey = spec;
+        return secretKey;
+    }
+    
+    private static GCMParameterSpec getGcmParameterSpecFromEncodedIv(int gcmSize, byte[] iv) {
+        GCMParameterSpec spec = new GCMParameterSpec(gcmSize, iv);
+        return spec;
     }
 }

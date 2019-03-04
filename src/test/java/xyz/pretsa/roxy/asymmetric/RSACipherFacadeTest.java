@@ -1,10 +1,7 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package xyz.pretsa.roxy.asymmetric;
 
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -18,7 +15,7 @@ public class RSACipherFacadeTest {
     RSACipherFacade facade;
     
     @Before
-    public void setUp() {
+    public void setUp() throws NoSuchAlgorithmException {
         facade = new RSACipherFacade();
     }
 
@@ -29,6 +26,27 @@ public class RSACipherFacadeTest {
     public void testRSAEncryptionDecriptionWithDefaultKeychain() {
         try {
             RSAKeychain keyChain = RSAKeychainBuilder.withNewKeyPair();
+            String original = "Ghazy";
+            String encryptedString = facade.encryptString(original, keyChain);
+            String decryptedString = facade.decryptString(encryptedString, keyChain);
+            assertEquals(decryptedString, original);
+        } catch (Exception e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testRSAEncryptionDecriptionWithExistingStringKeys() {
+        try {
+            RSAKeychain keyChain = RSAKeychainBuilder.withNewKeyPair();
+            byte[] publicKeyBytes = RSAKeychainBuilder.encodePublicKey(keyChain.getPublicKey());
+            byte[] privateKeyBytes = RSAKeychainBuilder.encodePrivateKey(keyChain.getPrivateKey());
+            
+            String publicKey = Base64.getEncoder().encodeToString(publicKeyBytes);
+            String privateKey = Base64.getEncoder().encodeToString(privateKeyBytes);
+            
+            keyChain = RSAKeychainBuilder.withExistingKeys(publicKey, privateKey);
             String original = "Ghazy";
             String encryptedString = facade.encryptString(original, keyChain);
             String decryptedString = facade.decryptString(encryptedString, keyChain);

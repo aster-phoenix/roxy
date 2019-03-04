@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -14,6 +16,7 @@ import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 /**
  *
@@ -23,6 +26,7 @@ public class RSAKeychainBuilder {
     
     private static final String ALGO = "RSA";
     private static final int KEY_SIZE = 2048;
+    private static final String UTF_8 = "UTF-8";
     
     public static RSAKeychain withNewKeyPair() throws NoSuchAlgorithmException {        
         return new RSAKeychain(generateKeyPair(KEY_SIZE));
@@ -37,6 +41,20 @@ public class RSAKeychainBuilder {
     }
     
     public static RSAKeychain withExistingKeys(PublicKey publicKey, PrivateKey privateKey) throws NoSuchAlgorithmException {        
+        return new RSAKeychain(publicKey, privateKey);
+    }
+    
+    public static RSAKeychain withExistingKeys(byte[] encodedPublicKey, byte[] encodedPrivateKey) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {        
+        PublicKey publicKey = getPublicKeyFromEncodedKey(encodedPublicKey);
+        PrivateKey privateKey = getPrivateKeyFromEncodedKey(encodedPrivateKey);
+        return new RSAKeychain(publicKey, privateKey);
+    }
+    
+    public static RSAKeychain withExistingKeys(String base64EncodedPublicKey, String base64EncodedPrivateKey) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {        
+        byte[] encodedPublicKey = Base64.getDecoder().decode(base64EncodedPublicKey);
+        byte[] encodedPrivateKey = Base64.getDecoder().decode(base64EncodedPrivateKey);
+        PublicKey publicKey = getPublicKeyFromEncodedKey(encodedPublicKey);
+        PrivateKey privateKey = getPrivateKeyFromEncodedKey(encodedPrivateKey);
         return new RSAKeychain(publicKey, privateKey);
     }
     
@@ -76,12 +94,8 @@ public class RSAKeychainBuilder {
         fis.close();
 
         // Generate KeyPair.
-        KeyFactory keyFactory = KeyFactory.getInstance(ALGO);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
-        PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-
-        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-        PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
+        PublicKey publicKey = getPublicKeyFromEncodedKey(encodedPublicKey);
+        PrivateKey privateKey = getPrivateKeyFromEncodedKey(encodedPrivateKey);
 
         return new KeyPair(publicKey, privateKey);
     }
@@ -91,16 +105,35 @@ public class RSAKeychainBuilder {
         PublicKey publicKey = keyPair.getPublic();
 
         // Store Public Key.
-        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         FileOutputStream fos = new FileOutputStream(keyPairPath.resolve("public.key").toFile());
-        fos.write(x509EncodedKeySpec.getEncoded());
+        fos.write(encodePublicKey(publicKey));
         fos.close();
 
         // Store Private Key.
-        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
         fos = new FileOutputStream(keyPairPath.resolve("private.key").toFile());
-        fos.write(pkcs8EncodedKeySpec.getEncoded());
+        fos.write(encodePrivateKey(privateKey));
         fos.close();
     }
     
+    private static PublicKey getPublicKeyFromEncodedKey(byte[] encodedPublicKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory keyFactory = KeyFactory.getInstance(ALGO);
+        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
+        return keyFactory.generatePublic(publicKeySpec);
+    }
+    
+    private static PrivateKey getPrivateKeyFromEncodedKey(byte[] encodedPrivateKey) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        KeyFactory keyFactory = KeyFactory.getInstance(ALGO);
+        PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
+        return keyFactory.generatePrivate(privateKeySpec);
+    }
+    
+    public static byte[] encodePublicKey(PublicKey publicKey) {
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        return x509EncodedKeySpec.getEncoded();
+    }
+    
+    public static byte[] encodePrivateKey(PrivateKey privateKey) {
+        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+        return pkcs8EncodedKeySpec.getEncoded();
+    }
 }
