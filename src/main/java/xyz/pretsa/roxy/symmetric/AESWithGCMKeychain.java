@@ -1,5 +1,6 @@
 package xyz.pretsa.roxy.symmetric;
 
+import java.util.Base64;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 
@@ -23,12 +24,28 @@ public class AESWithGCMKeychain {
         return secretKey;
     }
 
+    public byte[] getEncodedSecretKey() {
+        return secretKey.getEncoded();
+    }
+    
+    public String getEncodedSecretKeyAsString() {
+        return Base64.getEncoder().encodeToString(getEncodedSecretKey());
+    }
+    
     public void setSecretKey(SecretKey secretKey) {
         this.secretKey = secretKey;
     }
 
     public GCMParameterSpec getGcm() {
         return gcm;
+    }
+    
+    public byte[] getEncodedGcm() {
+        return gcm.getIV();
+    }
+    
+    public String getEncodedGcmAsString() {
+        return Base64.getEncoder().encodeToString(getEncodedGcm());
     }
 
     public void setGcm(GCMParameterSpec gcm) {
@@ -37,6 +54,10 @@ public class AESWithGCMKeychain {
 
     public byte[] getAad() {
         return aad;
+    }
+    
+    public String getEncodedAadAsString() {
+        return Base64.getEncoder().encodeToString(aad);
     }
 
     public void setAad(byte[] aad) {

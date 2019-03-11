@@ -27,8 +27,8 @@ public class RSACipherFacadeTest {
         try {
             RSAKeychain keyChain = RSAKeychainBuilder.withNewKeyPair();
             String original = "Ghazy";
-            String encryptedString = facade.encryptString(original, keyChain);
-            String decryptedString = facade.decryptString(encryptedString, keyChain);
+            String encryptedString = facade.encryp(original, keyChain);
+            String decryptedString = facade.decryp(encryptedString, keyChain);
             assertEquals(decryptedString, original);
         } catch (Exception e) {
             e.printStackTrace();
@@ -40,16 +40,14 @@ public class RSACipherFacadeTest {
     public void testRSAEncryptionDecriptionWithExistingStringKeys() {
         try {
             RSAKeychain keyChain = RSAKeychainBuilder.withNewKeyPair();
-            byte[] publicKeyBytes = RSAKeychainBuilder.encodePublicKey(keyChain.getPublicKey());
-            byte[] privateKeyBytes = RSAKeychainBuilder.encodePrivateKey(keyChain.getPrivateKey());
             
-            String publicKey = Base64.getEncoder().encodeToString(publicKeyBytes);
-            String privateKey = Base64.getEncoder().encodeToString(privateKeyBytes);
+            String stringPublicKey = keyChain.getEncodePublicKeyAsString();
+            String stringPrivateKey = keyChain.getEncodePrivateKeyAsString();
             
-            keyChain = RSAKeychainBuilder.withExistingKeys(publicKey, privateKey);
+            keyChain = RSAKeychainBuilder.withExistingKeys(stringPublicKey, stringPrivateKey);
             String original = "Ghazy";
-            String encryptedString = facade.encryptString(original, keyChain);
-            String decryptedString = facade.decryptString(encryptedString, keyChain);
+            String encryptedString = facade.encryp(original, keyChain);
+            String decryptedString = facade.decryp(encryptedString, keyChain);
             assertEquals(decryptedString, original);
         } catch (Exception e) {
             e.printStackTrace();

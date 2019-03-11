@@ -7,6 +7,7 @@ import java.security.SignatureException;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import xyz.pretsa.roxy.converter.Converters;
 
 /**
  *
@@ -15,26 +16,50 @@ import javax.crypto.NoSuchPaddingException;
 public class RSACipherFacade {
     
     private final String SHA512_SIGNATURE_ALGORITHM = "SHA512withRSA";
+    private final String UTF_8 = "UTF-8";
     private final RSACipher cipher;
 
     public RSACipherFacade() {
         this.cipher = new RSACipher();
     }
     
-    public String encryptString(String plainText, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException{
-        return cipher.encrypt(plainText, keyChain.getPublicKey());
+    // Encrypt
+    public String encryp(String message, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException{
+        byte[] encryptedMessage = encryp(message.getBytes(UTF_8), keyChain);
+        return Converters.toBase64(encryptedMessage);
+    }
+    public byte[] encryp(byte[] message, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException{
+        byte[] encryptedMessage = cipher.encrypt(message, keyChain.getPublicKey());
+        return encryptedMessage;
     }
     
-    public String decryptString(String encryptedText, RSAKeychain keyChain) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        return cipher.decrypt(encryptedText, keyChain.getPrivateKey());
+    // Decrypt
+    public String decryp(String encryptedMessage, RSAKeychain keyChain) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, UnsupportedEncodingException {
+        byte[] encryptedMessageBytes = Converters.fromBase64(encryptedMessage);
+        byte[] decryptedMessage = decryp(encryptedMessageBytes, keyChain);
+        return new String(decryptedMessage);
+    }
+    public byte[] decryp(byte[] encryptedMessage, RSAKeychain keyChain) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+        return cipher.decrypt(encryptedMessage, keyChain.getPrivateKey());
     }
     
-    public String signStringMsgWithSHA512(String msg, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, SignatureException {
-        return cipher.sign(msg, SHA512_SIGNATURE_ALGORITHM, keyChain.getPrivateKey());
+    // Sign
+    public String signStringMsgWithSHA512(String message, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, SignatureException {
+        byte[] messageSignature = signStringMsgWithSHA512(message.getBytes(UTF_8), keyChain);
+        return Converters.toBase64(messageSignature);
+    }
+    public byte[] signStringMsgWithSHA512(byte[] message, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, SignatureException {
+        return cipher.sign(message, SHA512_SIGNATURE_ALGORITHM, keyChain.getPrivateKey());
     }
     
-    public boolean verifySignatureWithSHA512(String msg, String signature, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
-        return cipher.verify(msg, signature, SHA512_SIGNATURE_ALGORITHM, keyChain.getPublicKey());
+    // Verify
+    public boolean verifySignatureWithSHA512(String message, String messageSignature, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
+        byte[] messageSignatureBytes = Converters.fromBase64(messageSignature);
+        return verifySignatureWithSHA512(message.getBytes(UTF_8), messageSignatureBytes, keyChain);
+        
+    }
+    public boolean verifySignatureWithSHA512(byte[] message, byte[] messageSignature, RSAKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
+        return cipher.verify(message, messageSignature, SHA512_SIGNATURE_ALGORITHM, keyChain.getPublicKey());
     }
     
     
