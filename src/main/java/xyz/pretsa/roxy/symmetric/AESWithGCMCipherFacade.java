@@ -15,7 +15,6 @@ import xyz.pretsa.roxy.converter.Converters;
  */
 public class AESWithGCMCipherFacade {
     
-    private final String UTF_8 = "UTF-8";
     private final AESWithGCMCipher cipher;
 
     public AESWithGCMCipherFacade() {
@@ -24,8 +23,9 @@ public class AESWithGCMCipherFacade {
     
     // Encrypt
     public String encrypt(String message, AESWithGCMKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException{
-        byte[] encryptedMessage = encrypt(message.getBytes(UTF_8), keyChain);
-        return Converters.toBase64(encryptedMessage);
+        byte[] messageBytes = Converters.stringToBytes(message);
+        byte[] encryptedMessage = encrypt(messageBytes, keyChain);
+        return Converters.bytesToBase64(encryptedMessage);
     }
     public byte[] encrypt(byte[] message, AESWithGCMKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException{
         return cipher.encrypt(message, keyChain.getSecretKey(), keyChain.getGcm(), keyChain.getAad());
@@ -33,9 +33,9 @@ public class AESWithGCMCipherFacade {
     
     // Decrypt
     public  String decrypt(String encryptedMessage, AESWithGCMKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
-        byte[] encryptedMessageBytes = Converters.fromBase64(encryptedMessage);
+        byte[] encryptedMessageBytes = Converters.base64ToBytes(encryptedMessage);
         byte[] decryptedMessage = decrypt(encryptedMessageBytes, keyChain);
-        return new String(decryptedMessage);
+        return Converters.bytesToString(decryptedMessage);
     }
     public byte[] decrypt(byte[] encryptedMessage, AESWithGCMKeychain keyChain) throws NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
         return cipher.decrypt(encryptedMessage, keyChain.getSecretKey(), keyChain.getGcm(), keyChain.getAad());

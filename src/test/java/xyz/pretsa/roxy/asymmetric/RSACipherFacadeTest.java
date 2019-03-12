@@ -1,8 +1,11 @@
 package xyz.pretsa.roxy.asymmetric;
 
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import org.junit.Before;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -12,47 +15,24 @@ import static org.junit.Assert.*;
  */
 public class RSACipherFacadeTest {
     
-    RSACipherFacade facade;
-    
-    @Before
-    public void setUp() throws NoSuchAlgorithmException {
-        facade = new RSACipherFacade();
+    private final String original = "ROXY";
+
+    private final RSACipherFacade instance;
+    private RSAKeychain keyChain;
+
+    public RSACipherFacadeTest() {
+        instance = new RSACipherFacade();
     }
 
     /**
      * Test of encryptString method, of class RSACipherFacade.
      */
     @Test
-    public void testRSAEncryptionDecriptionWithDefaultKeychain() {
-        try {
-            RSAKeychain keyChain = RSAKeychainBuilder.withNewKeyPair();
-            String original = "Ghazy";
-            String encryptedString = facade.encryp(original, keyChain);
-            String decryptedString = facade.decryp(encryptedString, keyChain);
-            assertEquals(decryptedString, original);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+    public void testRSAEncryptionDecriptionWithNewKeychain() throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, NoSuchPaddingException, BadPaddingException {
+        keyChain = RSAKeychainBuilder.withNewKeychain();
+        String encryptedString = instance.encryp(original, keyChain);
+        String decryptedString = instance.decryp(encryptedString, keyChain);
+        assertEquals(decryptedString, original);
     }
-    
-    @Test
-    public void testRSAEncryptionDecriptionWithExistingStringKeys() {
-        try {
-            RSAKeychain keyChain = RSAKeychainBuilder.withNewKeyPair();
-            
-            String stringPublicKey = keyChain.getEncodePublicKeyAsString();
-            String stringPrivateKey = keyChain.getEncodePrivateKeyAsString();
-            
-            keyChain = RSAKeychainBuilder.withExistingKeys(stringPublicKey, stringPrivateKey);
-            String original = "Ghazy";
-            String encryptedString = facade.encryp(original, keyChain);
-            String decryptedString = facade.decryp(encryptedString, keyChain);
-            assertEquals(decryptedString, original);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-    }
-    
+
 }

@@ -1,12 +1,17 @@
 package xyz.pretsa.roxy.symmetric;
 
-import java.util.Arrays;
-import java.util.Base64;
-import org.junit.After;
-import org.junit.Before;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import xyz.pretsa.roxy.digest.MessageDigestFacade;
+import xyz.pretsa.roxy.digest.SaltBuilder;
 
 /**
  *
@@ -14,68 +19,34 @@ import xyz.pretsa.roxy.digest.MessageDigestFacade;
  */
 public class AESWithGCMCipherFacadeTest {
 
-    AESWithGCMCipherFacade AESFacade;
-    MessageDigestFacade digestFacade;
+    private final String original = "ROXY";
+    private final String password = "PASSWORD";
 
-    @Before
-    public void setUp() {
+    private final AESWithGCMCipherFacade AESFacade;
+    private final MessageDigestFacade digestFacade;
+    private AESWithGCMKeychain keychain;
+
+    public AESWithGCMCipherFacadeTest() throws NoSuchAlgorithmException {
         AESFacade = new AESWithGCMCipherFacade();
         digestFacade = new MessageDigestFacade();
     }
 
-    @After
-    public void tearDown() {
+    @Test
+    public void testAESEncryptionDecriptionWithNewKeychain() throws NoSuchAlgorithmException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
+        keychain = AESWithGCMKeychainBuilder.withNewKeychain();
+        String encryptedString = AESFacade.encrypt(original, keychain);
+        String decryptedString = AESFacade.decrypt(encryptedString, keychain);
+        assertEquals(decryptedString, original);
     }
 
     @Test
-    public void testAESEncryptionDecriptionWithMinimalKeychain() {
-        try {
-            AESWithGCMKeychain keyChain = AESWithGCMKeychainBuilder.withNewKeychain();
-            String original = "Ghazy";
-            String encryptedString = AESFacade.encrypt(original, keyChain);
-            String decryptedString = AESFacade.decrypt(encryptedString, keyChain);
-            assertEquals(decryptedString, original);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-    }
-
-    @Test
-    public void testAESEncryptionDecriptionWithExistingKeychain() {
-        try {
-            AESWithGCMKeychain keyChain = AESWithGCMKeychainBuilder.withNewKeychain();
-
-            String secretKeyString = keyChain.getEncodedSecretKeyAsString();
-            String gcmString = keyChain.getEncodedGcmAsString();
-            String aadString = keyChain.getEncodedAadAsString();
-
-            keyChain = AESWithGCMKeychainBuilder.withExistingKeys(secretKeyString, 128, gcmString, aadString);
-            String original = "Ghazy";
-            String encryptedString = AESFacade.encrypt(original, keyChain);
-            String decryptedString = AESFacade.decrypt(encryptedString, keyChain);
-            assertEquals(decryptedString, original);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-    }
-
-    @Test
-    public void testAESEncryptionDecriptionWithCustomKeychain() {
-        try {
-            AESWithGCMKeychain keyChain = AESWithGCMKeychainBuilder.withNewKeychain();
-            String myCustomSecret = "passphrase";
-            byte[] hashedCustomKey = digestFacade.hashWithSha256(myCustomSecret);
-            keyChain = AESWithGCMKeychainBuilder.withExistingKeys(hashedCustomKey, 128, keyChain.getEncodedGcm(), keyChain.getAad());
-            String original = "Ghazy";
-            String encryptedString = AESFacade.encrypt(original, keyChain);
-            String decryptedString = AESFacade.decrypt(encryptedString, keyChain);
-            assertEquals(decryptedString, original);
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+    public void testAESEncryptionDecriptionWithCustomKeychain() throws NoSuchAlgorithmException, InvalidKeySpecException, InvalidKeyException, InvalidAlgorithmParameterException, NoSuchPaddingException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException {
+        keychain = AESWithGCMKeychainBuilder.withNewKeychain();
+        byte[] hashedCustomKey = digestFacade.hashWithPBKDF2(password.toCharArray(), SaltBuilder.random16BytesSalt());
+        keychain = AESWithGCMKeychainBuilder.withExistingEncodedKeys(hashedCustomKey, 128, keychain.getEncodedGcm(), keychain.getAad());
+        String encryptedString = AESFacade.encrypt(original, keychain);
+        String decryptedString = AESFacade.decrypt(encryptedString, keychain);
+        assertEquals(decryptedString, original);
     }
 
 }

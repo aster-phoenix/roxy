@@ -5,7 +5,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Base64;
+import xyz.pretsa.roxy.converter.Converters;
 
 /**
  *
@@ -42,13 +42,13 @@ public class RSAKeychain {
         return publicKey;
     }
     
-    public byte[] getEncodePublicKey() {
+    public byte[] getEncodedPublicKey() {
         X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
         return x509EncodedKeySpec.getEncoded();
     }
     
-    public String getEncodePublicKeyAsString() {
-        return Base64.getEncoder().encodeToString(getEncodePublicKey());
+    public String getEncodedPublicKeyAsString() {
+        return Converters.bytesToBase64(getEncodedPublicKey());
     }
 
     public void setPublicKey(PublicKey publicKey) {
@@ -59,13 +59,13 @@ public class RSAKeychain {
         return privateKey;
     }
     
-    public byte[] getEncodePrivateKey() {
+    public byte[] getEncodedPrivateKey() {
         PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
         return pkcs8EncodedKeySpec.getEncoded();
     }
     
-    public String getEncodePrivateKeyAsString() {
-        return Base64.getEncoder().encodeToString(getEncodePrivateKey());
+    public String getEncodedPrivateKeyAsString() {
+        return Converters.bytesToBase64(getEncodedPrivateKey());
     }
 
     public void setPrivateKey(PrivateKey privateKey) {

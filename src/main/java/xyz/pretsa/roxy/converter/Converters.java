@@ -1,5 +1,6 @@
 package xyz.pretsa.roxy.converter;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.util.Base64;
 
@@ -8,16 +9,26 @@ import java.util.Base64;
  * @author ghazy
  */
 public class Converters {
+    
+    private static final String UTF_8 = "UTF-8";
+    
+    public static String bytesToString(byte[] array) {
+        return new String(array);
+    }
+    
+    public static byte[] stringToBytes(String string) throws UnsupportedEncodingException {
+        return string.getBytes(UTF_8);
+    }
 
-    public static String toBase64(byte[] array) {
+    public static String bytesToBase64(byte[] array) {
         return Base64.getEncoder().encodeToString(array);
     }
 
-    public static byte[] fromBase64(String encodedArray) {
+    public static byte[] base64ToBytes(String encodedArray) {
         return Base64.getDecoder().decode(encodedArray);
     }
 
-    public static String toHex(byte[] array) {
+    public static String bytesToHex(byte[] array) {
         BigInteger bi = new BigInteger(1, array);
         String hex = bi.toString(16);
         int paddingLength = (array.length * 2) - hex.length();
@@ -28,7 +39,7 @@ public class Converters {
         }
     }
 
-    public static String fromHex(byte[] bytes) {
+    public static byte[] HexToBytes(String encodedArray) {
         throw new RuntimeException("Not Implemented yet");
     }
 }

@@ -9,11 +9,11 @@ import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import xyz.pretsa.roxy.converter.Converters;
 
 /**
  *
@@ -39,13 +39,13 @@ public class AESWithGCMKeychainBuilder {
         return new AESWithGCMKeychain(secretKey, gcm, aad);
     }
 
-    public static AESWithGCMKeychain withExistingKeys(byte[] encodedSecretKey, int gcmSize, byte[] encodedGcm, byte[] aad) throws NoSuchAlgorithmException {
+    public static AESWithGCMKeychain withExistingEncodedKeys(byte[] encodedSecretKey, int gcmSize, byte[] encodedGcm, byte[] aad) throws NoSuchAlgorithmException {
         SecretKey secretKey = getSecretKeyFromEncodedKey(encodedSecretKey);
         GCMParameterSpec gcm = getGcmParameterSpecFromEncodedIv(gcmSize, encodedGcm);
         return new AESWithGCMKeychain(secretKey, gcm, aad);
     }
 
-    public static AESWithGCMKeychain withExistingKeys(String encodedSecretKeyString, int gcmSize, String encodedGcmString, String encodedAadString) throws NoSuchAlgorithmException {
+    public static AESWithGCMKeychain withExistingEncodedKeys(String encodedSecretKeyString, int gcmSize, String encodedGcmString, String encodedAadString) throws NoSuchAlgorithmException {
         SecretKey secretKey = getSecretKeyFromEncodedKey(encodedSecretKeyString);
         GCMParameterSpec gcm = getGcmParameterSpecFromEncodedIv(gcmSize, encodedGcmString);
         byte[] aad = getAadfromEncodedString(encodedAadString);
@@ -62,14 +62,14 @@ public class AESWithGCMKeychainBuilder {
         return loadKeychainFromPath(GCM_SIZE, keysPath);
     }
 
-    public static SecretKey generateSecretKey(int keySize) throws NoSuchAlgorithmException {
+    private static SecretKey generateSecretKey(int keySize) throws NoSuchAlgorithmException {
         KeyGenerator keygen = KeyGenerator.getInstance(ALGO); // Specifying algorithm key will be used for 
         keygen.init(keySize); // Specifying Key size to be used, Note: This would need JCE Unlimited Strength to be installed explicitly 
         SecretKey secretKey = keygen.generateKey();
         return secretKey;
     }
 
-    public static GCMParameterSpec generateGCMParameterSpec(int ivSize, int gcmSize) {
+    private static GCMParameterSpec generateGCMParameterSpec(int ivSize, int gcmSize) {
         // Generating IV
         byte iv[] = new byte[ivSize];
         SecureRandom secRandom = new SecureRandom();
@@ -80,7 +80,7 @@ public class AESWithGCMKeychainBuilder {
         return gcmParamSpec;
     }
 
-    public static byte[] generateAad(String aad) {
+    private static byte[] generateAad(String aad) {
         return aad.getBytes();
     }
 
@@ -137,7 +137,7 @@ public class AESWithGCMKeychainBuilder {
     }
 
     private static SecretKey getSecretKeyFromEncodedKey(String encodedSecretKeyString) {
-        return getSecretKeyFromEncodedKey(Base64.getDecoder().decode(encodedSecretKeyString));
+        return getSecretKeyFromEncodedKey(Converters.base64ToBytes(encodedSecretKeyString));
     }
 
     private static SecretKey getSecretKeyFromEncodedKey(byte[] encodedSecretKey) {
@@ -147,7 +147,7 @@ public class AESWithGCMKeychainBuilder {
     }
 
     private static GCMParameterSpec getGcmParameterSpecFromEncodedIv(int gcmSize, String ivString) {
-        byte[] iv = Base64.getDecoder().decode(ivString);
+        byte[] iv = Converters.base64ToBytes(ivString);
         return getGcmParameterSpecFromEncodedIv(gcmSize, iv);
     }
 
@@ -157,6 +157,6 @@ public class AESWithGCMKeychainBuilder {
     }
 
     private static byte[] getAadfromEncodedString(String AadString) {
-        return Base64.getDecoder().decode(AadString);
+        return Converters.base64ToBytes(AadString);
     }
 }
