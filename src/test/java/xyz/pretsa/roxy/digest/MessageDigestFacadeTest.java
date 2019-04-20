@@ -1,8 +1,10 @@
 package xyz.pretsa.roxy.digest;
 
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import xyz.pretsa.roxy.converter.Converters;
 
 /**
  *
@@ -88,6 +90,29 @@ public class MessageDigestFacadeTest {
         int keySize = 128;
         byte[] result = instance.hashWithPBKDF2(message.toCharArray(), salt, iterations, keySize);
         assertEquals(16, result.length);
+    }
+    
+    @Test
+    public void testHashWithPBKDF2() throws Exception {
+        System.out.println("hashWithPBKDF2");
+        byte[] salt = SaltBuilder.random16BytesSalt();
+        byte[] result1 = instance.hashWithPBKDF2(message.toCharArray(), salt);
+        byte[] result2 = instance.hashWithPBKDF2(message.toCharArray(), salt);
+        String hash1 = Converters.bytesToBase64(result1);
+        String hash2 = Converters.bytesToBase64(result2);
+        String hash3 = instance.hashWithPBKDF2AsString(message, salt);
+        assertEquals(hash1, hash2);
+        assertEquals(hash1, hash3);
+        
+    }
+    
+    @Test
+    public void testSaltBuilder() throws Exception {
+        byte[] saltBytes1 = SaltBuilder.random16BytesSalt();
+        String saltString1 = Converters.bytesToBase64(saltBytes1);
+        byte[] saltBytes2 = SaltBuilder.existingSalt(saltString1);
+        String saltString2 = Converters.bytesToBase64(saltBytes2);
+        assertEquals(saltString1, saltString2);
     }
 
 }

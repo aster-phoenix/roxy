@@ -54,6 +54,14 @@ public class RSAKeychainBuilder {
         PrivateKey privateKey = getPrivateKeyFromEncodedKey(encodedPrivateKeyString);
         return new RSAKeychain(publicKey, privateKey);
     }
+    public static RSAKeychain withExistingEncodedPublicKey(String encodedPublicKeyString) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {        
+        PublicKey publicKey = getPublicKeyFromEncodedKey(encodedPublicKeyString);
+        return new RSAKeychain(publicKey, null);
+    }
+    public static RSAKeychain withExistingEncodedPrivateKey(String encodedPrivateKeyString) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {        
+        PrivateKey privateKey = getPrivateKeyFromEncodedKey(encodedPrivateKeyString);
+        return new RSAKeychain(null, privateKey);
+    }
     
     public static RSAKeychain withExistingKeyPairAtPath(Path keyPairPath) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {        
         return loadKeychainFromPath(keyPairPath);

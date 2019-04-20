@@ -1,7 +1,9 @@
 package xyz.pretsa.roxy.digest;
 
+import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import xyz.pretsa.roxy.converter.Converters;
 
 /**
  *
@@ -17,6 +19,10 @@ public class SaltBuilder {
         byte[] salt = new byte[DEFAULT_SALT_SIZE];
         sr.nextBytes(salt);
         return salt;
+    }
+    
+    public static byte[] existingSalt(String salt) throws UnsupportedEncodingException {
+        return Converters.base64ToBytes(salt);
     }
     
 }
