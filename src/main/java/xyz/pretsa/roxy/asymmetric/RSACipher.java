@@ -21,36 +21,34 @@ public class RSACipher {
 
     private final String ALGO_TRANSFORMATION_STRING = "RSA/ECB/OAEPWITHSHA-512ANDMGF1PADDING";
 
-    public String encrypt(String message, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
+    protected byte[] encrypt(byte[] message, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException, IllegalBlockSizeException, BadPaddingException, NoSuchPaddingException {
         Cipher c = Cipher.getInstance(ALGO_TRANSFORMATION_STRING);
         c.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] encryptedTextArray = c.doFinal(message.getBytes("UTF-8"));
-        return Base64.getEncoder().encodeToString(encryptedTextArray);
+        byte[] encryptedTextArray = c.doFinal(message);
+        return encryptedTextArray;
     }
 
-    public String decrypt(String encryptedText, PrivateKey privateKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-        byte[] encryptedTextArray = Base64.getDecoder().decode(encryptedText);
+    protected byte[] decrypt(byte[] encryptedMessage, PrivateKey privateKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
         Cipher c = Cipher.getInstance(ALGO_TRANSFORMATION_STRING);
         c.init(Cipher.DECRYPT_MODE, privateKey);
-        byte[] plainText = c.doFinal(encryptedTextArray);
-        return new String(plainText);
+        byte[] message = c.doFinal(encryptedMessage);
+        return message;
     }
 
-    public String sign(String message,String algorithm, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
+    protected byte[] sign(byte[] message,String algorithm, PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException,
             UnsupportedEncodingException, SignatureException {
 
         Signature signature = Signature.getInstance(algorithm);
         signature.initSign(privateKey);
-        signature.update(message.getBytes("UTF-8"));
-        byte[] sign = signature.sign();
-        return Base64.getEncoder().encodeToString(sign);
+        signature.update(message);
+        byte[] messageSignature = signature.sign();
+        return messageSignature;
     }
 
-    public boolean verify(String message, String sign, String algorithm, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
-        byte[] signTextArray = Base64.getDecoder().decode(sign);
+    protected boolean verify(byte[] message, byte[] messageSignature, String algorithm, PublicKey publicKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
         Signature signature = Signature.getInstance(algorithm);
         signature.initVerify(publicKey);
-        signature.update(message.getBytes("UTF-8"));
-        return signature.verify(signTextArray);
+        signature.update(message);
+        return signature.verify(messageSignature);
     }
 }

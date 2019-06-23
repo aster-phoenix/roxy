@@ -3,6 +3,9 @@ package xyz.pretsa.roxy.asymmetric;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import xyz.pretsa.roxy.converter.Converters;
 
 /**
  *
@@ -38,6 +41,15 @@ public class RSAKeychain {
     public PublicKey getPublicKey() {
         return publicKey;
     }
+    
+    public byte[] getEncodedPublicKey() {
+        X509EncodedKeySpec x509EncodedKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
+        return x509EncodedKeySpec.getEncoded();
+    }
+    
+    public String getEncodedPublicKeyAsString() {
+        return Converters.bytesToBase64(getEncodedPublicKey());
+    }
 
     public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
@@ -45,6 +57,15 @@ public class RSAKeychain {
 
     public PrivateKey getPrivateKey() {
         return privateKey;
+    }
+    
+    public byte[] getEncodedPrivateKey() {
+        PKCS8EncodedKeySpec pkcs8EncodedKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
+        return pkcs8EncodedKeySpec.getEncoded();
+    }
+    
+    public String getEncodedPrivateKeyAsString() {
+        return Converters.bytesToBase64(getEncodedPrivateKey());
     }
 
     public void setPrivateKey(PrivateKey privateKey) {
